@@ -20,7 +20,7 @@ library(shiny)
 library(plotly)
 library(shinycssloaders)
 library(shinydashboard)
-if(!require(shiny.i18n)){install.packages('shiny.i18n')}
+# if(!require(shiny.i18n)){install.packages('shiny.i18n')}
 # require(shiny.i18n)
 addInfo <- function(item, infoId) {
   infoTag <- tags$small(class = "badge pull-right action-button",
@@ -49,12 +49,13 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                       shinydashboard::sidebarMenu(
                                         addInfo(shinydashboard::menuItem("Description", tabName = "Description", icon = shiny::icon("home")), "DescriptionInfo"),
                                         addInfo(shinydashboard::menuItem("Library", tabName = "Library", icon = shiny::icon("table")), "LibraryInfo"),
-                                        addInfo(shinydashboard::menuItem("Performance", tabName = "Performance", icon = shiny::icon("bar-chart")), "PerformanceInfo"),
+                                        # addInfo(shinydashboard::menuItem("Performance", tabName = "Performance", icon = shiny::icon("bar-chart")), "PerformanceInfo"),
                                         addInfo(shinydashboard::menuItem("Model", tabName = "Model", icon = shiny::icon("clipboard")), "ModelInfo"),
+                                        # addInfo(shinydashboard::menuItem("Upload Analysis", tabName = "Upload", icon = shiny::icon("upload")), "UploadInfo"),
                                         addInfo(shinydashboard::menuItem("Help", tabName = "Help", icon = shiny::icon("info")), "HelpInfo")
                                       )
                                     ),
-                                    
+                                   
                                     shinydashboard::dashboardBody(
                                       shinydashboard::tabItems(
                                         
@@ -92,39 +93,40 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                   shiny::div(DT::dataTableOutput('summaryTable'), 
                                                                                                              style = "font-size:70%")),
                                                                                   
-                                                                                  shiny::tabPanel("Model Settings",
-                                                                                                  shiny::h3('Model Settings: ', 
+                                                                                  # shiny::tabPanel("Model Settings",
+                                                                                  shiny::tabPanel("Development Settings",
+                                                                                                                  shiny::h3('Model Settings: ', 
                                                                                                             shiny::a("help", href="https://ohdsi.github.io/PatientLevelPrediction/reference/index.html", target="_blank") 
                                                                                                   ),
-                                                                                                  DT::dataTableOutput('modelTable')),
+                                                                                                  DT::dataTableOutput('modelTable'),
                                                                                   
-                                                                                  shiny::tabPanel("Population Settings",
+                                                                                  # shiny::tabPanel("Population Settings",
                                                                                                   shiny::h3('Population Settings: ', 
                                                                                                             shiny::a("help", href="https://ohdsi.github.io/PatientLevelPrediction/reference/createStudyPopulation.html", target="_blank") 
                                                                                                   ),
-                                                                                                  DT::dataTableOutput('populationTable')),
+                                                                                                  DT::dataTableOutput('populationTable'),
                                                                                   
-                                                                                  shiny::tabPanel("Covariate Settings",
+                                                                                  # shiny::tabPanel("Covariate Settings",
                                                                                                   shiny::h3('Covariate Settings: ', 
                                                                                                             shiny::a("help", href="http://ohdsi.github.io/FeatureExtraction/reference/createCovariateSettings.html", target="_blank") 
                                                                                                   ),
-                                                                                                  DT::dataTableOutput('covariateTable'))
-                                                                                )
+                                                                                                  DT::dataTableOutput('covariateTable')),
+                                                                                # )
                                                                                 
-                                                                  )
+                                                                  # )
                                                                   
-                                                                )),
+                                                                # )),
                                         # second tab
-                                        shinydashboard::tabItem(tabName = "Performance", 
+                                        #  shinydashboard::tabItem(tabName = "Performance", 
                                                                 
-                                                                shiny::fluidRow(
-                                                                  tabBox(
-                                                                    title = "Performance", 
+                                                                # shiny::fluidRow(
+                                                                #   tabBox(
+                                                                #     title = "Performance", 
                                                                     # The id lets us use input$tabset1 on the server to find the current tab
-                                                                    id = "tabset1", height = "100%", width='100%',
-                                                                    tabPanel("Summary", 
+                                                                    # id = "tabset1", height = "100%", width='100%',
+                                                                    shiny::tabPanel("Summary",
                                                                              
-                                                                             shiny::fluidRow(
+                                                                             # shiny::fluidRow(
                                                                                shiny::column(width = 4,
                                                                                              shinydashboard::box(status = 'info', width = 12,
                                                                                                                  title = "Model Info & Download", solidHeader = TRUE,
@@ -183,11 +185,11 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                                  #infoBoxOutput("performanceBox"),
                                                                                              )
                                                                                )
-                                                                             )
+                                                                             # )
                                                                              
                                                                              
                                                                     ),
-                                                                    tabPanel("Discrimination", 
+                                        shiny::tabPanel("Discrimination", 
                                                                              
                                                                              shiny::fluidRow(
                                                                                shinydashboard::box( status = 'info',
@@ -224,7 +226,7 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                              
                                                                              
                                                                     ),
-                                                                    tabPanel("Calibration", 
+                                        shiny::tabPanel("Calibration", 
                                                                              shiny::fluidRow(
                                                                                shinydashboard::box(status = 'info',
                                                                                                    title = actionLink("calHelp","Calibration Plot", icon = icon("info")),
@@ -237,26 +239,29 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                    shinycssloaders::withSpinner(shiny::plotOutput('demo')))
                                                                              )
                                                                     ),
-                                                                    tabPanel("Validation",
-                                                                             shiny::div(DT::dataTableOutput('validationTable'), 
+                                        shiny::tabPanel("Validation",
+                                                                             
+                                                                          shiny::div(DT::dataTableOutput('validationTable'), 
                                                                                                      style = "font-size:70%"),
 
-                                                                    shiny::fluidRow(
-                                                                      shinydashboard::box(status = 'info',
+                                                                          shiny::fluidRow(
+                                                                            shinydashboard::box(status = 'info',
                                                                                           title = actionLink("rocHelp","Roc Plot", icon = icon("info")),
                                                                                           solidHeader = TRUE,
                                                                                           shinycssloaders::withSpinner(shiny::plotOutput('valRoc'))),
-                                                                      shinydashboard::box(status = 'info',
+                                                                          shinydashboard::box(status = 'info',
                                                                                           title = actionLink("calHelp","Calibration Plot", icon = icon("info")),
                                                                                           solidHeader = TRUE,
                                                                                           side = "right",
                                                                                           shinycssloaders::withSpinner(shiny::plotOutput('valCal')))
-                                                                     )
-                                                                    )   
-                                                                  ))),
+                                                                     ),
+                                                                     shiny::div(DT::dataTableOutput('databaseInfo'),
+                                                                     style = "font-size:70%")
+                                                                    )
+                                                                  )))),
                                         
                                         # 3rd tab
-                                        shinydashboard::tabItem(tabName = "Model", 
+                                        shinydashboard::tabItem(tabName = "Model",
                                                                 shiny::fluidRow(
                                                                   shinydashboard::box( status = 'info',
                                                                                        title = "Binary", solidHeader = TRUE,
@@ -275,11 +280,29 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                                                                                     shiny::downloadButton("downloadData", "Download Model"),
                                                                                                     DT::dataTableOutput('modelView')))
                                         ),
-                                        
-                                        # 4th tab
-                                        shinydashboard::tabItem(tabName = "Log", 
+
+                                        # # 4th tab
+                                        shinydashboard::tabItem(tabName = "Log",
                                                                 shiny::verbatimTextOutput('log')
                                         )
+                                        #5th tab
+                                        # shinydashboard::tabItem(tabName = "Upload",
+                                        #                         div(
+                                        #                           id = "form",
+                                        #                           
+                                        #                           textInput("studyLeadName", "Full name of study lead", ""),
+                                        #                           textInput("studyLeadAffiliation", "Affiliation of Study Lead", ""),
+                                        #                           textInput("studyLeadEmail", "E-mail of Study Lead", ""),
+                                        #                           selectInput("AnalysisType", "Are you submitting a development or a validation?", c("Development","Validation")),
+                                        #                           textInput("studyDescription", "Provide a short description of the model. Please include the target and outcome definitions as well as information on the envisioned application of the model. If this is a validation study please include the model id number of the development study.                                                                                                                                                        E.G. This is a model to predict outcome of heart failure within 1 year of initialisation of a second type 2 diabetes drug. The model aims to help in guiding treatment choice at index.", ""),
+                                        #                           textInput("modelName", "Enter a model name. Otherwise default is <surname>-<year> e.g. williams-2020", ""),
+                                        #                           fileInput("plpResult", "Choose plpResult File",
+                                        #                                     multiple = FALSE,
+                                        #                                     accept = c()),
+                                        #                           actionButton("submit", "Submit", class = "btn-primary")
+                                        #                         )                       
+                                        # )
+                                                                
                                         
                                         
                                       )

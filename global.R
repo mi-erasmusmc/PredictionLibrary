@@ -26,6 +26,5 @@ if(inputType == 'file' & !is.null(validation)){
 }
 
 summaryTable <- getSummary(result, inputType, validation)
-
-
+databaseInfo <- read.csv("./www/databaseInfo.csv")
 

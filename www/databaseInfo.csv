@@ -1,0 +1,15 @@
+Database,Name,Country,Type,Start,End
+OptumDoD,Optum® De-Identified Clinformatic Data Mart Database – Date of Death (DOD) ,USA,Claims,2000,2019
+AU_ePBRN,Australian Electronic Practice Based Research Network,Australia,Linked EHR (GP + Hospital),2012,2019
+AUSOM,Ajou University School of Medicine Database,Korea,EHR,1999,2018
+CCAE,IBM MarketScan® Commercial Database,USA,Claims,2000,2019
+CUIMC,Columbia University Irving Medical Center Data Warehouse,USA,EMR,1990,2020
+VA,Department of Veterans Affairs ,USA,EMR,2014,2020
+HIRA,Health Insurance and Review Assessment,Korea,Claims,2013,2020
+IPCI,Integrated Primary Care Information,Netherlands,GP,2006,2020
+JMDC,Japan Medical Data Center,Japan,Claims,2000,2019
+MDCD,IBM MarketScan® Multi-State Medicaid Database ,USA,Claims,2006,2019
+MDCR,IBM MarketScan® Medicare Supplemental Database ,USA,Claims,2000,2019
+optumEhr,Optum® de-identified Electronic Health Record Dataset ,USA,EHR,2006,2019
+SIDIAP,The Information System for Research in Primary Care (SIDIAP),Spain,GP,2006,2020
+TRDW,Tufts Research Data Warehouse,USA,EHR,2006,2020

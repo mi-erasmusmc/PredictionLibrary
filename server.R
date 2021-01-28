@@ -29,11 +29,14 @@ server <- shiny::shinyServer(function(input, output, session) {
 
   # need to remove over columns:
 
-  output$summaryTable <- DT::renderDataTable(DT::datatable(summaryTable %>% 
+  output$summaryTable <- DT::renderDataTable({DT::datatable(summaryTable %>% 
                                                              mutate("# of External Validations" = table(summaryTable$Analysis)[Analysis] - 1) %>%
+                                                             # mutate("TAR"= `TAR end` - `TAR start`) %>%
+                                                             mutate("TAR"= paste(`TAR start`, "to", `TAR end`, "days")) %>%
                                                              filter(as.character(Dev) == as.character(Val)) %>%
-                                                             select("Analysis","# of External Validations", "Dev",'Val',"T","O","Model","TAR start","TAR end", "AUC","T Size", "O Count", "O Incidence (%)" )
-                                                           ,rownames= FALSE, selection = 'single', options=list(scrollX=TRUE)))
+                                                             # select("Analysis","# of External Validations", "Dev",'Val',"T","O","Model","TAR start","TAR end", "AUC","T Size", "O Count", "O Incidence (%)" )
+                                                             select("T","O","TAR","AUC","Dev","# of External Validations", "Model","T Size", "O Count", "O Incidence (%)" )
+                                                            ,rownames= FALSE, selection = 'single', options=list(scrollX=TRUE)) %>% DT::formatRound(c("AUC", "O Incidence (%)"), 2)})
   
   
   
@@ -97,7 +100,7 @@ server <- shiny::shinyServer(function(input, output, session) {
                      Analysis == summaryTable[filterIndex(),'Analysis'][selectedRow()]))
   
   output$validationTable <- DT::renderDataTable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC)), rownames= FALSE)
-  
+  output$databaseInfo <- DT::renderDataTable(getDatabaseInfo(validationTable(), valSelectedRow(), databaseInfo))
   valFilterIndex <- shiny::reactive({getFilter(validationTable(), input)})
   valSelectedRow <- shiny::reactive({
     if(is.null(input$validationTable_rows_selected[1])){
@@ -218,7 +221,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     valfindex <- valFilterIndex()
     #use sort so the order doesnt break the plotMultipleRoc/Cal
     rows <- sort(valSelectedRow())
-    print(rows)
+    # print(rows)
     names <- valTable[rows, "Val"]
     for (i in 1:length(rows)){
       valtemplist[[i]] <- getPlpResult(result,validation,valTable, inputType,valfindex, rows[i])

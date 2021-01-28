@@ -227,4 +227,9 @@ getValidationPerformance <- function(validationLocation){
   return(valPerformance)
 }
 
+getDatabaseInfo <- function(summaryTable, rows, databaseInfo){
+  selectedDbs <- summaryTable[rows, "Val"]
+  dplyr::filter(databaseInfo, Database %in% selectedDbs)
+  return(dplyr::filter(databaseInfo, Database %in% selectedDbs))
+}
 
