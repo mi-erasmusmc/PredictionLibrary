@@ -51,7 +51,7 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                         addInfo(shinydashboard::menuItem("Library", tabName = "Library", icon = shiny::icon("table")), "LibraryInfo"),
                                         # addInfo(shinydashboard::menuItem("Performance", tabName = "Performance", icon = shiny::icon("bar-chart")), "PerformanceInfo"),
                                         addInfo(shinydashboard::menuItem("Model", tabName = "Model", icon = shiny::icon("clipboard")), "ModelInfo"),
-                                        # addInfo(shinydashboard::menuItem("Upload Analysis", tabName = "Upload", icon = shiny::icon("upload")), "UploadInfo"),
+                                        addInfo(shinydashboard::menuItem("Upload Analysis", tabName = "Upload", icon = shiny::icon("upload")), "UploadInfo"),
                                         addInfo(shinydashboard::menuItem("Help", tabName = "Help", icon = shiny::icon("info")), "HelpInfo")
                                       )
                                     ),
@@ -284,24 +284,58 @@ ui <- shinydashboard::dashboardPage(skin = 'black',
                                         # # 4th tab
                                         shinydashboard::tabItem(tabName = "Log",
                                                                 shiny::verbatimTextOutput('log')
+                                        ),
+                                        # 5th tab
+                                        shinydashboard::tabItem(tabName = "Upload",
+                                                                div(
+                                                                  id = "form",
+                                                                  selectizeInput(
+                                                                    'researcherName', label = "Full name of study lead", choices = NULL,
+                                                                    options = list(create = TRUE)
+                                                                  ),
+                                                                  selectizeInput(
+                                                                    'researcherAffiliation', label = "Affiliation of study lead", choices = NULL,
+                                                                    options = list(create = TRUE)
+                                                                  ),
+                                                              
+                                                                  textInput("researcherEmail", "E-mail of Study Lead", ""),
+                                                                  #databasesection
+                                                                  selectizeInput(
+                                                                    'databaseName', label = "Name of database used", choices = NULL,
+                                                                    options = list(create = TRUE)
+                                                                  ),
+                                                                  selectizeInput(
+                                                                    'databaseAcronym', label = "Acronym of database used", choices = NULL,
+                                                                    options = list(create = TRUE)
+                                                                  ),
+                                                                  selectizeInput(
+                                                                    'databaseDesc', label = "Description of database used", choices = NULL,
+                                                                    options = list(create = TRUE)
+                                                                  ),
+                                                                  selectizeInput(
+                                                                    'databaseType', label = "Type of database used", choices = c("Claims", "EHR", "GP"),
+                                                                    options = list(create = TRUE)
+                                                                  ),
+                                                                  selectInput("AnalysisType", "Are you submitting a development or a validation?", c("Development","Validation")),
+                                                                  textInput("studyDescription", "Provide a short description of the model. Please include the target and outcome definitions as well as information on the envisioned application of the model. If this is a validation study please include the model id number of the development study.                                                                                                                                                        E.G. This is a model to predict outcome of heart failure within 1 year of initialisation of a second type 2 diabetes drug. The model aims to help in guiding treatment choice at index.", ""),
+                                                                  textInput("modelName", "Enter a model name. Otherwise default is <surname>-<year> e.g. williams-2020", ""),
+                                                                  # fileInput("plpResult", "Choose plpResult File",
+                                                                  #           multiple = FALSE,
+                                                                  #           accept = c()),
+                                                                  textInput("targetName", "Enter the name of the target cohort used"),
+                                                                  # fileInput("targetCohort", "Choose target cohort json File",
+                                                                  #           multiple = FALSE,
+                                                                  #           accept = c(".json")),
+                                                                  textInput("outcomeName", "Enter the name of the outcome cohort used"),
+                                                                  # fileInput("outcomeCohort", "Choose outcome cohort json File",
+                                                                  #                                          multiple = FALSE,
+                                                                  #                                          accept = c(".json")),
+                                                                  fileInput("libraryUpload", "Choose libraryUpload zip file",
+                                                                            multiple = FALSE,
+                                                                            accept = c()),
+                                                                  actionButton("submitStudy", "Submit", class = "btn-primary")
+                                                                )
                                         )
-                                        #5th tab
-                                        # shinydashboard::tabItem(tabName = "Upload",
-                                        #                         div(
-                                        #                           id = "form",
-                                        #                           
-                                        #                           textInput("studyLeadName", "Full name of study lead", ""),
-                                        #                           textInput("studyLeadAffiliation", "Affiliation of Study Lead", ""),
-                                        #                           textInput("studyLeadEmail", "E-mail of Study Lead", ""),
-                                        #                           selectInput("AnalysisType", "Are you submitting a development or a validation?", c("Development","Validation")),
-                                        #                           textInput("studyDescription", "Provide a short description of the model. Please include the target and outcome definitions as well as information on the envisioned application of the model. If this is a validation study please include the model id number of the development study.                                                                                                                                                        E.G. This is a model to predict outcome of heart failure within 1 year of initialisation of a second type 2 diabetes drug. The model aims to help in guiding treatment choice at index.", ""),
-                                        #                           textInput("modelName", "Enter a model name. Otherwise default is <surname>-<year> e.g. williams-2020", ""),
-                                        #                           fileInput("plpResult", "Choose plpResult File",
-                                        #                                     multiple = FALSE,
-                                        #                                     accept = c()),
-                                        #                           actionButton("submit", "Submit", class = "btn-primary")
-                                        #                         )                       
-                                        # )
                                                                 
                                         
                                         

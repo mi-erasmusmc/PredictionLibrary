@@ -19,6 +19,16 @@
 library(shiny)
 library(plotly)
 library(shinycssloaders)
+library(DatabaseConnector)
+library(DBI)
+library(odbc)
+# con <- DBI::dbConnect(odbc::odbc(),
+#                       Driver   = "SQL Server",
+#                       Server   = "healthdatascience.database.windows.net",
+#                       Database = "hds1",
+#                       UID      = rstudioapi::askForPassword("Database user"),
+#                       PWD      = rstudioapi::askForPassword("Database password"),
+#                       Port     = 1433)
 
 source("helpers.R")
 source("plots.R")
@@ -99,7 +109,8 @@ server <- shiny::shinyServer(function(input, output, session) {
   validationTable <- shiny::reactive(dplyr::filter(summaryTable[filterIndex(),],
                      Analysis == summaryTable[filterIndex(),'Analysis'][selectedRow()]))
   
-  output$validationTable <- DT::renderDataTable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC)), rownames= FALSE)
+  output$validationTable <- DT::renderDataTable({DT::datatable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC, `T Size`, `O Count`, `O Incidence (%)`)), 
+                                                               rownames= FALSE) %>% DT::formatRound(c("AUC", "O Incidence (%)"))})
   output$databaseInfo <- DT::renderDataTable(getDatabaseInfo(validationTable(), valSelectedRow(), databaseInfo))
   valFilterIndex <- shiny::reactive({getFilter(validationTable(), input)})
   valSelectedRow <- shiny::reactive({
@@ -324,6 +335,39 @@ server <- shiny::shinyServer(function(input, output, session) {
       "NPV", paste0(round(performance()$NPV*1000)/10, "%"), icon = shiny::icon("minus-square"),
       color = "black"
     )
+  })
+  
+  #upload functionality and options
+  researchers <- DBI::dbGetQuery("SELECT researcher_id, researcher_name, researcher_affiliation FROM researchers;", conn = con)
+  updateSelectizeInput(session, 'researcherName', choices = c("",researchers$researcher_name), server = TRUE)
+  updateSelectizeInput(session, 'researcherAffiliation', choices = c("",researchers$researcher_affiliation), server = TRUE)
+  # database inputs
+  databases <- DBI::dbGetQuery("SELECT * FROM databases;", conn = con)
+  updateSelectizeInput(session, 'databaseName', choices = c("", databases$database_name), server = TRUE, options = list(maxItems = 5))
+  updateSelectizeInput(session, 'databaseAcronym', choices = c("", databases$database_acronym), server = TRUE,options = list(maxItems = 5))
+  updateSelectizeInput(session, 'databaseDesc', choices = c("", databases$database_description), server = TRUE, options = list(maxItems = 5))
+  updateSelectizeInput(session, 'databaseType', choices = c("", databases$database_type), server = TRUE)
+  observeEvent(input$submitStudy,{
+    inputData <- data.frame(matrix(ncol=11,nrow=0, dimnames=list(NULL, c("researcherName","researcherAffiliation","researcherEmail",
+                                                                         "databaseName","databaseAcronym","databaseDesc","databaseType",
+                                                                         "analysisType",
+                                                                         "modelName","targetName","outcomeName"))))
+
+    inputData[1,] <- c(
+      input$researcherName,input$researcherAffiliation,input$researcherEmail,
+      input$databaseName,input$databaseAcronym, input$databaseDesc, input$databaseType,
+      input$AnalysisType,
+      input$modelName, input$targetName,input$outcomeName)
+      folderPath <- file.path("./dataHoldingFolder", paste0( trimws(input$researcherName),trimws(input$modelName)))
+      if(!dir.exists(folderPath)){
+        dir.create(folderPath)
+      }
+      readr::write_csv(inputData, path = file.path(folderPath,"inputdata.csv"))
+      file.copy(from = input$libraryUpload$datapath, to = file.path(folderPath, "libraryUpload.zip"))
+      
+      # file.copy(from = input$plpResult$datapath, to = file.path(folderPath, "plpResult.rds"))
+      # file.copy(from = input$targetCohort$datapath, to = file.path(folderPath, "target.json"))
+      # file.copy(from = input$outcomeCohort$datapath,to =  file.path(folderPath, "outcome.json"))
   })
   
 })
