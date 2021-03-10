@@ -84,24 +84,6 @@ formatCovSettings <- function(covariateSettings){
   if(class(covariateSettings)=='list'){
     #code for when multiple covariateSettings
     covariates <- c() 
-    for(i in 1:length(covariateSettings)){
-      if(attr(covariateSettings[[i]],'fun')=='getDbDefaultCovariateData'){
-        covariatesTemp <- data.frame(covariateName = names(covariateSettings[[i]]), 
-                                     SettingValue = unlist(lapply(covariateSettings[[i]], 
-                                                                  function(x) paste0(x, 
-                                                                                     collapse='-'))))
-      } else{
-        covariatesTemp <- data.frame(covariateName = covariateSettings[[i]]$covariateName,
-                                     SettingValue = ifelse(sum(names(covariateSettings[[i]])%in%c("startDay","endDay"))>0,
-                                                           paste(names(covariateSettings[[i]])[names(covariateSettings[[i]])%in%c("startDay","endDay")],
-                                                                 covariateSettings[[i]][names(covariateSettings[[i]])%in%c("startDay","endDay")], sep=':', collapse = '-'),
-                                                           "")
-        )
-        
-      }
-      covariates  <- rbind(covariates,covariatesTemp)
-    }
-  } else{
     covariates <- data.frame(covariateName = names(covariateSettings), 
                              SettingValue = unlist(lapply(covariateSettings, 
                                                           function(x) paste0(x, 

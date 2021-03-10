@@ -3,7 +3,7 @@
 
 plotShiny <- function(eval){
   
-  data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('test','validation'),]
+  data <- eval$thresholdSummary[trimws(eval$thresholdSummary$Eval)%in%c('test','validation'),]
 
   rocobject <- plotly::plot_ly(x = 1-c(0,data$specificity,1)) %>%
     plotly::add_lines(y = c(1,data$sensitivity,0),name = "hv", 
@@ -52,10 +52,8 @@ plotShiny <- function(eval){
 }
 
 getORC <- function(eval, pointOfInterest){
-  
-  data <- eval$thresholdSummary[eval$thresholdSummary$Eval%in%c('test','validation'),]
+  data <- eval$thresholdSummary[trimws(eval$thresholdSummary$Eval)%in%c('test','validation'),]
   pointOfInterest <- data[pointOfInterest,]
-  
   threshold <- pointOfInterest$predictionThreshold
   TP <- pointOfInterest$truePositiveCount
   TN <- pointOfInterest$trueNegativeCount
@@ -163,7 +161,7 @@ plotPredictedPDF <- function(evaluation, type='test', fileName=NULL){
   if(is.null(evaluation$thresholdSummary$Eval)){
     evaluation$thresholdSummary$Eval <- type
   }
-  ind <- evaluation$thresholdSummary$Eval==type
+  ind <- trimws(evaluation$thresholdSummary$Eval)==type
   
   x<- evaluation$thresholdSummary[ind,c('predictionThreshold','truePositiveCount','trueNegativeCount',
                                         'falsePositiveCount','falseNegativeCount')]
@@ -213,7 +211,7 @@ plotPreferencePDF <- function(evaluation, type='test', fileName=NULL){
   if(is.null(evaluation$thresholdSummary$Eval)){
     evaluation$thresholdSummary$Eval <- type
   }
-  ind <- evaluation$thresholdSummary$Eval==type
+  ind <- trimws(evaluation$thresholdSummary$Eval)==type
   
   x<- evaluation$thresholdSummary[ind,c('preferenceThreshold','truePositiveCount','trueNegativeCount',
                                         'falsePositiveCount','falseNegativeCount')]
@@ -262,7 +260,7 @@ plotDemographicSummary <- function(evaluation, type='test', fileName=NULL){
     if(is.null(evaluation$demographicSummary$Eval)){
       evaluation$demographicSummary$Eval <- type
     }
-    ind <- evaluation$demographicSummary$Eval==type
+    ind <- trimws(evaluation$demographicSummary$Eval)==type
     x<- evaluation$demographicSummary[ind,colnames(evaluation$demographicSummary)%in%c('ageGroup','genGroup','averagePredictedProbability',
                                                                                        'PersonCountAtRisk', 'PersonCountWithOutcome')]
     
@@ -345,7 +343,7 @@ plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
   if(is.null(evaluation$calibrationSummary$Eval)){
     evaluation$calibrationSummary$Eval <- type
   }
-  ind <- evaluation$calibrationSummary$Eval==type
+  ind <- trimws(evaluation$calibrationSummary$Eval)==type
   
   x<- evaluation$calibrationSummary[ind,c('averagePredictedProbability','observedIncidence', 'PersonCountAtRisk')]
   
@@ -411,10 +409,12 @@ plotSparseCalibration2 <- function(evaluation, type='test', fileName=NULL){
 # }
 
 plotPredictionDistribution <- function(evaluation, type='test', fileName=NULL){
+
   if(is.null(evaluation$predictionDistribution$Eval)){
     evaluation$predictionDistribution$Eval <- type
   }
-  ind <- evaluation$predictionDistribution$Eval==type
+  if(type=="Development"){type = "test"}
+  ind <- trimws(evaluation$predictionDistribution$Eval)==type
   x<- evaluation$predictionDistribution[ind,]
   
   #(x=Class, y=predictedProbabllity sequence:  min->P05->P25->Median->P75->P95->max)

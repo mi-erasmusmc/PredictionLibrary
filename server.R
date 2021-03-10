@@ -39,14 +39,10 @@ server <- shiny::shinyServer(function(input, output, session) {
 
   # need to remove over columns:
 
-  output$summaryTable <- DT::renderDataTable({DT::datatable(summaryTable %>% 
-                                                             mutate("# of External Validations" = table(summaryTable$Analysis)[Analysis] - 1) %>%
-                                                             # mutate("TAR"= `TAR end` - `TAR start`) %>%
-                                                             mutate("TAR"= paste(`TAR start`, "to", `TAR end`, "days")) %>%
-                                                             filter(as.character(Dev) == as.character(Val)) %>%
-                                                             # select("Analysis","# of External Validations", "Dev",'Val',"T","O","Model","TAR start","TAR end", "AUC","T Size", "O Count", "O Incidence (%)" )
-                                                             select("T","O","TAR","AUC","Dev","# of External Validations", "Model","T Size", "O Count", "O Incidence (%)" )
-                                                            ,rownames= FALSE, selection = 'single', options=list(scrollX=TRUE)) %>% DT::formatRound(c("AUC", "O Incidence (%)"), 2)})
+  output$summaryTable <- DT::renderDataTable({DT::datatable(summaryTable %>%
+                                                              mutate_if(is.character, str_trim) %>%
+                                                              mutate(AUC = round(AUC, 2)) %>%
+                                                              mutate(Incidence = round(outcome_count / population_size, 2)))})
   
   
   
@@ -58,7 +54,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     }
   })
   
-  plpResult <- shiny::reactive({getPlpResult(result,validation,summaryTable, inputType,filterIndex(), selectedRow())})
+  plpResult <- shiny::reactive({loadPlpFromDb(summaryTable[selectedRow(),])})
   # covariate table
   output$modelView <- DT::renderDataTable(editCovariates(plpResult()$covariateSummary)$table,  
                                           colnames = editCovariates(plpResult()$covariateSummary)$colnames)
@@ -93,7 +89,10 @@ server <- shiny::shinyServer(function(input, output, session) {
   
   
   
-  
+  # author info
+  authorInfo <- shiny::reactive(DBI::dbGetQuery(conn = con, paste0("SELECT * FROM researchers WHERE researcher_id = ",plpResult()$researcher_id)))
+  output$authorName  <- shiny::renderText(paste("Author:",trimws(plpResult()$researcherInfo$researcher_name)))
+  output$authorEmail <- shiny::renderText(paste("Email:",trimws(plpResult()$researcherInfo$researcher_email)))
   # prediction text
   output$info <- shiny::renderText(paste0('Within ', summaryTable[filterIndex(),'T'][selectedRow()],
                                           ' predict who will develop ',  summaryTable[filterIndex(),'O'][selectedRow()],
@@ -106,12 +105,23 @@ server <- shiny::shinyServer(function(input, output, session) {
 
   
   # validation table and selection
-  validationTable <- shiny::reactive(dplyr::filter(summaryTable[filterIndex(),],
-                     Analysis == summaryTable[filterIndex(),'Analysis'][selectedRow()]))
-  
-  output$validationTable <- DT::renderDataTable({DT::datatable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC, `T Size`, `O Count`, `O Incidence (%)`)), 
-                                                               rownames= FALSE) %>% DT::formatRound(c("AUC", "O Incidence (%)"))})
-  output$databaseInfo <- DT::renderDataTable(getDatabaseInfo(validationTable(), valSelectedRow(), databaseInfo))
+  shiny::reactive(print(plpResult()$model_id))
+  validationTable <-  shiny::reactive(DBI::dbGetQuery(conn = con, 
+                                      paste("SELECT results.result_id, results.model_id, researcher_id, result_type, database_acronym AS Dev, target_name AS T, outcome_name AS O,
+   model_type AS model, TAR, AUC, population_size, outcome_count
+   FROM results
+    LEFT JOIN (SELECT cohort_id, cohort_name as target_name FROM cohorts) AS cohorts ON results.target_id = cohorts.cohort_id
+    LEFT JOIN (SELECT cohort_id, cohort_name as outcome_name FROM cohorts) AS targets ON results.outcome_id = targets.cohort_id
+    LEFT JOIN (SELECT database_id, database_acronym FROM databases) as dbs ON results.database_id = dbs.database_id 
+    LEFT JOIN (SELECT model_id, model_type FROM model_settings) AS mset ON results.model_id = mset.model_id
+    LEFT JOIN (SELECT result_id, AUC_auc AS AUC, population_size, outcome_count 
+                      FROM evaluation_statistics) AS es ON results.result_id = es.result_id
+    WHERE results.model_id =", plpResult()$model_id)))
+
+  output$validationTable <- DT::renderDataTable({DT::datatable(validationTable())})
+  # output$validationTable <- DT::renderDataTable({DT::datatable(dplyr::select(validationTable(),c(Analysis, Dev, Val, AUC, `T Size`, `O Count`, `O Incidence (%)`)), 
+  #                                                              rownames= FALSE) %>% DT::formatRound(c("AUC", "O Incidence (%)"))})
+  output$databaseInfo <- DT::renderDataTable(DBI::dbGetQuery(conn = con, paste0("SELECT database_name, database_acronym, database_type FROM databases WHERE database_acronym IN (",knitr::combine_words(trimws(validationTable()$Dev), before = "'", after = "'", and = ','),")" )))
   valFilterIndex <- shiny::reactive({getFilter(validationTable(), input)})
   valSelectedRow <- shiny::reactive({
     if(is.null(input$validationTable_rows_selected[1])){
@@ -149,7 +159,6 @@ server <- shiny::shinyServer(function(input, output, session) {
   performance <- shiny::reactive({
     
     eval <- plpResult()$performanceEvaluation
-    
     if(is.null(eval)){
       return(NULL)
     } else {
@@ -184,7 +193,7 @@ server <- shiny::shinyServer(function(input, output, session) {
       return(NULL)
     } else{
       plotPreferencePDF(plpResult()$performanceEvaluation, 
-                        type=plpResult()$type ) #+ 
+                        type="test" ) #+ 
       # ggplot2::geom_vline(xintercept=plotters()$prefthreshold) -- RMS
     }
   })
@@ -194,7 +203,7 @@ server <- shiny::shinyServer(function(input, output, session) {
       return(NULL)
     } else{
       plotPredictedPDF(plpResult()$performanceEvaluation, 
-                       type=plpResult()$type ) # + 
+                       type="test" ) # + 
       #ggplot2::geom_vline(xintercept=plotters()$threshold) -- RMS     
     }
   })
@@ -203,7 +212,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      plotPredictionDistribution(plpResult()$performanceEvaluation, type=plpResult()$type )
+      plotPredictionDistribution(plpResult()$performanceEvaluation, type="test" )
     }
   })
   
@@ -211,7 +220,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      plotSparseCalibration2(plpResult()$performanceEvaluation, type=plpResult()$type )
+      plotSparseCalibration2(plpResult()$performanceEvaluation, type="test" )
     }
   })
 
@@ -220,7 +229,7 @@ server <- shiny::shinyServer(function(input, output, session) {
       return(NULL)
     } else{
       tryCatch(plotDemographicSummary(plpResult()$performanceEvaluation, 
-                                      type=plpResult()$type ),
+                                      type="test" ),
                error= function(cond){return(NULL)})
     }
   })
@@ -229,27 +238,30 @@ server <- shiny::shinyServer(function(input, output, session) {
   valResult <- shiny::reactive({
     valtemplist <- list()
     valTable <- validationTable()
-    valfindex <- valFilterIndex()
-    #use sort so the order doesnt break the plotMultipleRoc/Cal
-    rows <- sort(valSelectedRow())
-    # print(rows)
-    names <- valTable[rows, "Val"]
+    dev <- loadPlpFromDb(valTable[1,])
+    xmax <- max(dev$performanceEvaluation$calibrationSummary$averagePredictedProbability)
+    ymax <- max(dev$performanceEvaluation$calibrationSummary$observedIncidence)
+    rows <-  sort(valSelectedRow())
+    names <- valTable[rows, "Dev"]
     for (i in 1:length(rows)){
-      valtemplist[[i]] <- getPlpResult(result,validation,valTable, inputType,valfindex, rows[i])
+      valtemplist[[i]] <- loadPlpFromDb(valTable[i,])
     }
-    list(valtemplist, names)
+    list(valtemplist, names, xmax, ymax)
   })
   
   valPlots <- shiny::reactive({
     results <- valResult()
+    saveRDS(results,"results.rds")
     if(is.null(results[[1]][[1]]$performanceEvaluation)){
+      # list(valRocPlot= NULL, valCalPlot = NULL)
       return(NULL)
     } else{
-      
-      valCalPlot <- PredictionComparison::plotMultipleCal(results[[1]], names = results[[2]])
+      xmax = results[[3]]
+      ymax = results[[4]]
+      valCalPlot <- PredictionComparison::plotMultipleCal(results[[1]], names = trimws(results[[2]])) +
+        ggplot2::annotate("rect", xmin = 0, ymin = 0, xmax = xmax, ymax = ymax, alpha = 0.2, fill = 'yellow')
       valRocPlot <- PredictionComparison::plotMultipleRoc(results[[1]], names = results[[2]], grid = F)
       list(valRocPlot= valRocPlot, valCalPlot = valCalPlot)
-      
     }
   })
   

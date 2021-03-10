@@ -226,10 +226,3 @@ getValidationPerformance <- function(validationLocation){
   #valPerformance$calplot <- file.path(validationLocation,'plots','sparseCalibrationConventional.pdf')
   return(valPerformance)
 }
-
-getDatabaseInfo <- function(summaryTable, rows, databaseInfo){
-  selectedDbs <- summaryTable[rows, "Val"]
-  dplyr::filter(databaseInfo, Database %in% selectedDbs)
-  return(dplyr::filter(databaseInfo, Database %in% selectedDbs))
-}
-
