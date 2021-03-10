@@ -41,6 +41,8 @@ loadPlpFromDb <- function(chosenRow){
   result$model$metaData$call$covariateSettings <- result$inputSetting$dataExtrractionSettings$covariateSettings
   result$researcherInfo <- DBI::dbGetQuery(conn = con, paste0("SELECT researcher_name, researcher_email FROM researchers WHERE researcher_id =", researcher_id))
   result$model_id <- model_id
+  
+  #hack so the check in plot,utlipl.. doesnt break it
   result$analysisRef <- ""
   result$executionSummary <- ""
   class(result) <- "runPlp"
