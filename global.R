@@ -8,7 +8,7 @@ con <- DBI::dbConnect(odbc::odbc(),
                       Server   = Sys.getenv("shinydbServer"),
                       Database = Sys.getenv("shinydbDatabase"),
                       UID      = Sys.getenv("covid19vaccinationplpdbUser"),
-                      password = Sys.getenv("covid19vaccinationplpdbPw"),
+                      PWD = Sys.getenv("covid19vaccinationplpdbPw"),
                       Port     = Sys.getenv("shinydbPort")
 )
 
@@ -36,13 +36,6 @@ if(is.null(.GlobalEnv$shinySettings$validation)){
   validation <- .GlobalEnv$shinySettings$validation
 }
 
-inputType <- checkPlpInput(result) # this function checks 
-if(!class(validation)%in%c('NULL', 'validatePlp')){
-  stop('Incorrect validation class')
-}
-if(inputType == 'file' & !is.null(validation)){
-  warning('Validation input ignored when result is a directory location')
-}
 
 summaryTable <- DBI::dbGetQuery(conn = con, 
                                 "SELECT results.result_id, results.model_id, researcher_id, result_type, database_acronym AS Dev, target_name AS T, outcome_name AS O,
