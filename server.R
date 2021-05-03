@@ -22,6 +22,8 @@ library(shinycssloaders)
 library(DatabaseConnector)
 library(DBI)
 library(odbc)
+library(dplyr)
+library(stringr)
 # con <- DBI::dbConnect(odbc::odbc(),
 #                       Driver   = "SQL Server",
 #                       Server   = "healthdatascience.database.windows.net",
@@ -220,7 +222,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     if(is.null(plpResult()$performanceEvaluation)){
       return(NULL)
     } else{
-      plotSparseCalibration2(plpResult()$performanceEvaluation, type="test" )
+      plotSparseCalibration2(plpResult()$performanceEvaluation)
     }
   })
 
@@ -253,12 +255,12 @@ server <- shiny::shinyServer(function(input, output, session) {
     results <- valResult()
     saveRDS(results,"results.rds")
     if(is.null(results[[1]][[1]]$performanceEvaluation)){
-      # list(valRocPlot= NULL, valCalPlot = NULL)
       return(NULL)
     } else{
       xmax = results[[3]]
       ymax = results[[4]]
-      valCalPlot <- PredictionComparison::plotMultipleCal(results[[1]], names = trimws(results[[2]])) +
+      saveRDS(results, "results.RDS")
+      valCalPlot <- PredictionComparison::plotMultipleCal(results[[1]], names = trimws(results[[2]]), style = "smooth" ) +
         ggplot2::annotate("rect", xmin = 0, ymin = 0, xmax = xmax, ymax = ymax, alpha = 0.2, fill = 'yellow')
       valRocPlot <- PredictionComparison::plotMultipleRoc(results[[1]], names = results[[2]], grid = F)
       list(valRocPlot= valRocPlot, valCalPlot = valCalPlot)
